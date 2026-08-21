@@ -2,7 +2,7 @@ import * as LaunchDarkly from '@launchdarkly/node-server-sdk';
 import { batchSize, contextForOneShot, contextForTraffic, isLoadProbe, probeSummary, scheduledEvaluations } from './traffic.mjs';
 
 const repository = 'demo-orders';
-const release = 'v002';
+const release = 'v003';
 const flags = ["demo-cart-v2","demo-checkout-rollout","demo-email-notifications-v2","demo-express-returns","demo-inventory-reservation","demo-order-history-v2","demo-payment-retry"];
 const profiles = ['production', 'staging', 'test', 'dev'];
 const safeIdentifier = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
@@ -97,11 +97,14 @@ async function probeTraffic(client, options) {
 async function main() {
   const sdkKey = process.env.LD_EVALUATION_SDK_KEY;
   if (!sdkKey) throw new Error('LD_EVALUATION_SDK_KEY is required.');
-  const options = optionsFrom(process.argv.slice(2)); const probe = options.traffic && isLoadProbe(repository, options.profile);
+  const options = optionsFrom(process.argv.slice(2));
+  // The probe is opt-in: a service name must never decide traffic shape on its own, because a
+  // single-flag rate probe covers one flag where an ordinary batch covers every flag the release owns.
+  const probe = options.traffic && isLoadProbe(repository, options.profile) && process.env.DEMO_LOAD_PROBE === 'true';
   const connect = () => LaunchDarkly.init(sdkKey, {
     capacity: 10000, flushInterval: 5, enableEventCompression: true,
     contextKeysCapacity: Math.min(options.contextPoolSize, 10000), contextKeysFlushInterval: 300, logger,
-    application: { id: repository, name: repository + ' synthetic evaluator', version: release, versionName: probe ? 'production-load-probe' : 'standard-traffic' }
+    application: { id: repository, name: repository, version: release, versionName: probe ? 'production-load-probe' : 'standard-traffic' }
   });
   const stop = () => { stopRequested = true; if (wake) wake(); };
   process.once('SIGINT', stop); process.once('SIGTERM', stop);
