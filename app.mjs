@@ -3,7 +3,7 @@ import { batchSize, contextForOneShot, contextForTraffic, isLoadProbe, probeSumm
 
 const repository = 'demo-orders';
 const release = 'v003';
-const flags = ["demo-cart-v2","demo-checkout-rollout","demo-email-notifications-v2","demo-express-returns","demo-inventory-reservation","demo-order-history-v2","demo-payment-retry"];
+const flags = ["demo-cart-v2","demo-checkout-rollout","demo-email-notifications-v2","demo-express-returns","demo-inventory-reservation","demo-payment-retry"];
 const profiles = ['production', 'staging', 'test', 'dev'];
 const safeIdentifier = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const integer = (value, minimum, maximum, label) => {
